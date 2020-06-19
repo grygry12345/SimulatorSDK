@@ -2,7 +2,7 @@
 
 [![N|Solid](https://raw.githubusercontent.com/COVISART/SimulatorSDK/master/LogoStylesSideBySide.png)](https://unity.com/)
 
-[![Build Status](https://travis-ci.org/joemccann/dillinger.svg?branch=master)](https://travis-ci.org/github/COVISART/SimulatorSDK)
+[![Build Status](https://travis-ci.org/COVISART/SimulatorSDK.svg?branch=master&status=unknown)](https://travis-ci.org/github/COVISART/SimulatorSDK)
 
 Vehicle simulator based on a motion system developed using virtual and augmented reality technologies. System supports multi axis motion systems. This simulator allows users to use the aircraft they want in a virtual environment. Using AR technology, user can interact with virtual cockpit. Unlimited rotation system provide most realistic flight experience.
 
