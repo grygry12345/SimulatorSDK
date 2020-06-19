@@ -311,20 +311,20 @@ MonoBehaviour:
     m_SkipHidden: 0
     m_SearchArea: 1
     m_Folders:
-    - Assets/CovisartMotionSDK
+    - Assets/Prefabs
   m_ViewMode: 1
   m_StartGridSize: 62
   m_LastFolders:
-  - Assets/CovisartMotionSDK
+  - Assets/Prefabs
   m_LastFoldersGridSize: 62
   m_LastProjectPath: C:\Users\grygr\Documents\Covisart Motion Simulator SDK
   m_LockTracker:
     m_IsLocked: 0
   m_FolderTreeState:
     scrollPos: {x: 0, y: 0}
-    m_SelectedIDs: fc340000
-    m_LastClickedID: 13564
-    m_ExpandedIDs: 00000000f634000000ca9a3b
+    m_SelectedIDs: f0350000
+    m_LastClickedID: 13808
+    m_ExpandedIDs: 00000000e635000000ca9a3b
     m_RenameOverlay:
       m_UserAcceptedRename: 0
       m_Name: 
@@ -352,7 +352,7 @@ MonoBehaviour:
     scrollPos: {x: 0, y: 0}
     m_SelectedIDs: 
     m_LastClickedID: 0
-    m_ExpandedIDs: 00000000f6340000
+    m_ExpandedIDs: 00000000e6350000
     m_RenameOverlay:
       m_UserAcceptedRename: 0
       m_Name: 
@@ -475,9 +475,9 @@ MonoBehaviour:
   m_SceneHierarchy:
     m_TreeViewState:
       scrollPos: {x: 0, y: 0}
-      m_SelectedIDs: 56310000
+      m_SelectedIDs: 
       m_LastClickedID: 0
-      m_ExpandedIDs: 6afbffff82330000
+      m_ExpandedIDs: bafaffff743400008a340000
       m_RenameOverlay:
         m_UserAcceptedRename: 0
         m_Name: 
