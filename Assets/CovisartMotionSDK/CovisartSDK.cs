@@ -1,6 +1,7 @@
 ﻿using SimulatorBackgroundWorkerService.CommonClasses;
 using CovisartCommunicationSDK;
 using UnityEngine;
+using System.Threading;
 
 namespace CovisartMotionSDK
 {
@@ -17,68 +18,86 @@ namespace CovisartMotionSDK
         }
         public void OpenConnection()
         {
-            SendData(_commandData.OpenConnection());
+            Thread thread = new Thread(() => _commandData.OpenConnection());
+            
+            thread.Start();
             Debug.Log("Connection started");
         }
         public void PowerMotors()
         {
-            SendData(_commandData.PowerOn());
+            Thread thread = new Thread(() => _commandData.PowerOn());
+            thread.Start();
+            
             Debug.Log("Motors Powered");
         }
 
         public void PowerAxisX()
         {
-            SendData(_commandData.PowerOnX());
+            Thread thread = new Thread(() => _commandData.PowerOnX());
+            thread.Start();
             Debug.Log("Axis X Powered");
         }
 
         public void PowerAxisY()
         {
-            SendData(_commandData.PowerOnY());
+            Thread thread = new Thread(() => _commandData.PowerOnY());
+            thread.Start();
             Debug.Log("Axis Y Powered");
         }
 
         public void CalibrateAxisX()
         {
-            SendData(_commandData.CalibrateX());
+            Thread thread = new Thread(() => _commandData.CalibrateX());
+            thread.Start();
             Debug.Log("X Axis calibrated");
         }
 
         public void CalibrateAxisY()
         {
-            SendData(_commandData.CalibrateY());
+            Thread thread = new Thread(() => _commandData.CalibrateY());
+            thread.Start();
             Debug.Log("Y Axis calibrated");
         }
 
         public void ResetError()
         {
-            SendData(_commandData.ResetError());
-            Debug.Log("Error reset.");
+            Thread thread = new Thread(() => _commandData.ResetError());
+            thread.Start();
+            Debug.Log("Reset Error.");
         }
 
         public void ResetErrorX()
         {
-            SendData(_commandData.ResetErrorX());
-            Debug.Log("Error X reset");
+            Thread thread = new Thread(() => _commandData.ResetErrorX());
+            thread.Start();
+            Debug.Log("Reset X error");
         }
 
         public void ResetErrorY()
         {
-            SendData(_commandData.ResetErrorY());
-            Debug.Log("Error Y reset");
+            Thread thread = new Thread(() => _commandData.ResetErrorY());
+            thread.Start();
+            Debug.Log("Reset Y error");
+        }
+
+        private void StartExactPositionThread()
+        {
+            _commandData.EnableExactPositonX();
+            _commandData.EnableExactPositonY();
+            var state = (_commandData.GetState());
+            Debug.Log(state);
         }
 
         public void StartExactPosition()
         {
-            SendData(_commandData.EnableExactPositonX());
-            SendData(_commandData.EnableExactPositonY());
-            var state = SendData(_commandData.GetState());
-            Debug.Log(state);
+            Thread thread = new Thread(() => StartExactPositionThread());
+            thread.Start();
         }
 
         public void StartDataListener()
         {
-            SendData(_commandData.StartArmaThread());
+            Thread thread = new Thread(() => _commandData.StartArmaThread());
+            thread.Start();
         }
 
         public void StartDataTransfer()
@@ -93,13 +112,19 @@ namespace CovisartMotionSDK
             }
         }
 
-        public void StopDataTransfer()
+        private void StopDataTransferThread()
         {
             if(_communication == null)
                 _communication = new CommunicationSDK();
             var state = _communication.StopCommunication();
             if(state.hasError)
                 Debug.Log(state.errorMessage);
+        }
+
+        public void StopDataTrensfer()
+        {
+            Thread thread = new Thread(() => StopDataTransferThread());
+            thread.Start();
         }
 
         private void SendOfData(string axisX, string axisY)
@@ -124,10 +149,10 @@ namespace CovisartMotionSDK
             Debug.Log(state);
         }*/
 
-        private static  string SendData(byte[] bits)
-        {
-            return MyTcpClient.Connect("127.0.0.1", bits);
-        }
+        //private static  string SendData(byte[] bits)
+        //{
+        //    return MyTcpClient.Connect("127.0.0.1", bits);
+        //}
     }
 }
 
