@@ -12,72 +12,143 @@ namespace CovisartMotionSDK
         private AxisData _axisData;
         private SimulatorCommandData _commandData;
         public bool IsDataTransferStarted = false;
+        private Thread thread = new Thread(() => IdleThread());
+
         void Awake()
         {
             _commandData = new SimulatorCommandData();
         }
+
+        private static void IdleThread()
+        {
+
+        }
+
         public void OpenConnection()
         {
-            Thread thread = new Thread(() => _commandData.OpenConnection());
-            
-            thread.Start();
-            Debug.Log("Connection started");
+            if (!thread.IsAlive) 
+            {
+                thread = new Thread(() => _commandData.OpenConnection());
+                thread.Start();
+                Debug.Log("Connection started");
+            }
+            else
+            {
+                Debug.LogError("Thread is busy");
+            }
         }
         public void PowerMotors()
         {
-            Thread thread = new Thread(() => _commandData.PowerOn());
-            thread.Start();
-            
-            Debug.Log("Motors Powered");
+            if (!thread.IsAlive)
+            {
+                thread = new Thread(() => _commandData.PowerOn());
+                thread.Start();
+                Debug.Log("Motors powered");
+            }
+            else
+            {
+                Debug.LogError("Thread is busy");
+            }
         }
 
         public void PowerAxisX()
         {
-            Thread thread = new Thread(() => _commandData.PowerOnX());
-            thread.Start();
-            Debug.Log("Axis X Powered");
+            if (!thread.IsAlive)
+            {
+                thread = new Thread(() => _commandData.PowerOnX());
+                thread.Start();
+                Debug.Log("Axis X Powered");
+            }
+            else
+            {
+                Debug.LogError("Thread is busy");
+            }
         }
 
         public void PowerAxisY()
         {
-            Thread thread = new Thread(() => _commandData.PowerOnY());
-            thread.Start();
-            Debug.Log("Axis Y Powered");
+
+            if (!thread.IsAlive)
+            {
+                thread = new Thread(() => _commandData.PowerOnY());
+                thread.Start();
+                Debug.Log("Axis Y Powered");
+            }
+            else
+            {
+                Debug.LogError("Thread is busy");
+            }
         }
 
         public void CalibrateAxisX()
         {
-            Thread thread = new Thread(() => _commandData.CalibrateX());
-            thread.Start();
-            Debug.Log("X Axis calibrated");
+            if (!thread.IsAlive)
+            {
+                thread = new Thread(() => _commandData.CalibrateX());
+                thread.Start();
+                Debug.Log("Axis X calibrated");
+            }
+            else
+            {
+                Debug.LogError("Thread is busy");
+            }
         }
 
         public void CalibrateAxisY()
         {
-            Thread thread = new Thread(() => _commandData.CalibrateY());
-            thread.Start();
-            Debug.Log("Y Axis calibrated");
+            if (!thread.IsAlive)
+            {
+                thread = new Thread(() => _commandData.CalibrateY());
+                thread.Start();
+                Debug.Log("Axis Y calibrated");
+            }
+            else
+            {
+                Debug.LogError("Thread is busy");
+            }
         }
 
         public void ResetError()
         {
-            Thread thread = new Thread(() => _commandData.ResetError());
-            thread.Start();
-            Debug.Log("Reset Error.");
+
+            if (!thread.IsAlive)
+            {
+                thread = new Thread(() => _commandData.ResetError());
+                thread.Start();
+                Debug.Log("Reset Error.");
+            }
+            else
+            {
+                Debug.LogError("Thread is busy");
+            }
         }
 
         public void ResetErrorX()
         {
-            Thread thread = new Thread(() => _commandData.ResetErrorX());
-            thread.Start();
-            Debug.Log("Reset X error");
+            if (!thread.IsAlive)
+            {
+                thread = new Thread(() => _commandData.ResetErrorX());
+                thread.Start();
+                Debug.Log("Reset Error X.");
+            }
+            else
+            {
+                Debug.LogError("Thread is busy");
+            }
         }
 
         public void ResetErrorY()
         {
-            Thread thread = new Thread(() => _commandData.ResetErrorY());
-            thread.Start();
-            Debug.Log("Reset Y error");
+            if (!thread.IsAlive)
+            {
+                thread = new Thread(() => _commandData.ResetErrorY());
+                thread.Start();
+                Debug.Log("Reset Error Y.");
+            }
+            else
+            {
+                Debug.LogError("Thread is busy");
+            }
         }
 
         private void StartExactPositionThread()
@@ -90,25 +161,53 @@ namespace CovisartMotionSDK
 
         public void StartExactPosition()
         {
-            Thread thread = new Thread(() => StartExactPositionThread());
-            thread.Start();
+            if (!thread.IsAlive)
+            {
+                thread = new Thread(() => StartExactPositionThread());
+                thread.Start();
+            }
+            else
+            {
+                Debug.LogError("Thread is busy");
+            };
         }
 
         public void StartDataListener()
         {
-            Thread thread = new Thread(() => _commandData.StartArmaThread());
-            thread.Start();
+            if (!thread.IsAlive)
+            {
+                thread = new Thread(() => _commandData.StartArmaThread());
+                thread.Start();
+                Debug.Log("Data litener started.");
+            }
+            else
+            {
+                Debug.LogError("Thread is busy");
+            }
+        }
+
+        private void StartDataTransferThread()
+        {
+            _communication = new CommunicationSDK();
+            var state = _communication.StartCommunication();
+            if (state.hasError)
+                Debug.LogError(state.errorMessage);
+            else
+            {
+                IsDataTransferStarted = true;
+            }
         }
 
         public void StartDataTransfer()
         {
-            _communication = new CommunicationSDK();
-            var state = _communication.StartCommunication();
-            if(state.hasError)
-                Debug.Log(state.errorMessage);
+            if (!thread.IsAlive)
+            {
+                thread = new Thread(() => StartDataTransferThread());
+                thread.Start();
+            }
             else
             {
-                IsDataTransferStarted = true;
+                Debug.LogError("Thread is busy");
             }
         }
 
@@ -118,13 +217,20 @@ namespace CovisartMotionSDK
                 _communication = new CommunicationSDK();
             var state = _communication.StopCommunication();
             if(state.hasError)
-                Debug.Log(state.errorMessage);
+                Debug.LogError(state.errorMessage);
         }
 
         public void StopDataTrensfer()
         {
-            Thread thread = new Thread(() => StopDataTransferThread());
-            thread.Start();
+            if (!thread.IsAlive)
+            {
+                thread = new Thread(() => StopDataTransferThread());
+                thread.Start();
+            }
+            else
+            {
+                Debug.LogError("Thread is busy");
+            }
         }
 
         private void SendOfData(string axisX, string axisY)
