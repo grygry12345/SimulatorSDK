@@ -1,6 +1,9 @@
 ﻿using SimulatorBackgroundWorkerService.CommonClasses;
 using CovisartCommunicationSDK;
 using UnityEngine;
+using System.Threading;
+using System;
+using System.Runtime.CompilerServices;
 
 namespace CovisartMotionSDK
 {
@@ -11,53 +14,134 @@ namespace CovisartMotionSDK
         private AxisData _axisData;
         private SimulatorCommandData _commandData;
         public bool IsDataTransferStarted = false;
+        private Thread thread;
+
         void Awake()
         {
             _commandData = new SimulatorCommandData();
         }
+
+        private void ControlTread(Func<byte[]> command, string log)
+        {
+            // Problematic because if thread is null thread keeps returns false and thread is never started...
+            if (thread?.IsAlive ?? false)
+            {
+                thread = new Thread(() => command());
+                thread.Start();
+                Debug.Log(log);
+            }
+            else
+            {
+                Debug.LogError("Thread is busy");
+            }
+        }
+
+        private void ControlTread(Action command)
+        {
+            // Problematic because if thread is null thread keeps returns false and thread is never started...
+            if (thread?.IsAlive ?? false)
+            {
+                thread = new Thread(() => command());
+                thread.Start();
+            }
+            else
+            {
+                Debug.LogError("Thread is busy");
+            }
+        }
+
         public void OpenConnection()
         {
-            SendData(_commandData.OpenConnection());
-            Debug.Log("Connection started");
+            ControlTread(_commandData.OpenConnection, "Opened connection");
         }
+
         public void PowerMotors()
         {
-            SendData(_commandData.PowerOn());
-            Debug.Log("Motors Powered");
+            ControlTread(_commandData.PowerOn, "Motors Powered");
+        }
+
+        public void PowerAxisX()
+        {
+            ControlTread(_commandData.PowerOnX, "X Powered");
+        }
+
+        public void PowerAxisY()
+        {
+            ControlTread(_commandData.PowerOnY, "Y Powered");
+        }
+
+        public void CalibrateAxisX()
+        {
+            ControlTread(_commandData.CalibrateX, "X Calibrated");
+        }
+
+        public void CalibrateAxisY()
+        {
+            ControlTread(_commandData.CalibrateY, "Y Calibrated");
+        }
+
+        public void ResetError()
+        {
+            ControlTread(_commandData.ResetError, "Error Reset");
+        }
+
+        public void ResetErrorX()
+        {
+            ControlTread(_commandData.ResetErrorX, "Error X Reset");
+        }
+
+        public void ResetErrorY()
+        {
+            ControlTread(_commandData.ResetErrorY, "Error Y Reset");
+        }
+
+        private void StartExactPositionThread()
+        {
+            _commandData.EnableExactPositonX();
+            _commandData.EnableExactPositonY();
+            var state = (_commandData.GetState());
+            Debug.Log(state);
         }
 
         public void StartExactPosition()
         {
-            SendData(_commandData.EnableExactPositonX());
-            SendData(_commandData.EnableExactPositonY());
-            var state = SendData(_commandData.GetState());
-            Debug.Log(state);
+            ControlTread(StartExactPositionThread);
         }
 
         public void StartDataListener()
         {
-            SendData(_commandData.StartArmaThread());
+            ControlTread(_commandData.StartArmaThread, "Data listener started.");
         }
 
-        public void StartDataTransfer()
+        private void StartDataTransferThread()
         {
             _communication = new CommunicationSDK();
             var state = _communication.StartCommunication();
-            if(state.hasError)
-                Debug.Log(state.errorMessage);
+            if (state.hasError)
+                Debug.LogError(state.errorMessage);
             else
             {
                 IsDataTransferStarted = true;
             }
         }
 
-        public void StopDataTransfer()
+        public void StartDataTransfer()
+        {
+            ControlTread(StartDataTransferThread);
+        }
+
+        private void StopDataTransferThread()
         {
             if(_communication == null)
                 _communication = new CommunicationSDK();
             var state = _communication.StopCommunication();
             if(state.hasError)
-                Debug.Log(state.errorMessage);
+                Debug.LogError(state.errorMessage);
+        }
+
+        public void StopDataTrensfer()
+        {
+            ControlTread(StopDataTransferThread);
         }
 
         private void SendOfData(string axisX, string axisY)
@@ -82,10 +166,10 @@ namespace CovisartMotionSDK
             Debug.Log(state);
         }*/
 
-        private static  string SendData(byte[] bits)
-        {
-            return MyTcpClient.Connect("127.0.0.1", bits);
-        }
+        //private static string SendData(byte[] bits)
+        //{
+        //    return MyTcpClient.Connect("127.0.0.1", bits);
+        //}
     }
 }
 
