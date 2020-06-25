@@ -39,7 +39,7 @@ namespace CovisartMotionSDK
         private void ControlTread(Action command)
         {
             // Problematic because if thread is null thread keeps returns false and thread is never started...
-            if (thread?.IsAlive ?? false)
+            if (!(thread?.IsAlive ?? false))
             {
                 thread = new Thread(() => command());
                 thread.Start();
