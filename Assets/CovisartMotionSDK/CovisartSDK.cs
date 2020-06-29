@@ -15,6 +15,7 @@ namespace CovisartMotionSDK
         private SimulatorCommandData _commandData;
         public bool IsDataTransferStarted = false;
         private Thread thread;
+        private CommandData state;
 
         void Awake()
         {
@@ -23,10 +24,9 @@ namespace CovisartMotionSDK
 
         private void ControlTread(Func<byte[]> command, string log)
         {
-            // Problematic because if thread is null thread keeps returns false and thread is never started...
-            if (thread?.IsAlive ?? false)
+            if (!(thread?.IsAlive ?? false))
             {
-                thread = new Thread(() => command());
+                thread = new Thread(() => SendData(command()));
                 thread.Start();
                 Debug.Log(log);
             }
@@ -35,11 +35,9 @@ namespace CovisartMotionSDK
                 Debug.LogError("Thread is busy");
             }
         }
-
         private void ControlTread(Action command)
         {
-            // Problematic because if thread is null thread keeps returns false and thread is never started...
-            if (thread?.IsAlive ?? false)
+            if (!(thread?.IsAlive ?? false))
             {
                 thread = new Thread(() => command());
                 thread.Start();
@@ -99,8 +97,12 @@ namespace CovisartMotionSDK
         {
             _commandData.EnableExactPositonX();
             _commandData.EnableExactPositonY();
-            var state = (_commandData.GetState());
-            Debug.Log(state);
+            string json = (SendData(_commandData.GetState()));
+
+            state = new CommandData();
+            // it will be chacked
+            JsonUtility.FromJsonOverwrite(json, state);
+            Debug.Log(this.state);
         }
 
         public void StartExactPosition()
@@ -132,10 +134,10 @@ namespace CovisartMotionSDK
 
         private void StopDataTransferThread()
         {
-            if(_communication == null)
+            if (_communication == null)
                 _communication = new CommunicationSDK();
             var state = _communication.StopCommunication();
-            if(state.hasError)
+            if (state.hasError)
                 Debug.LogError(state.errorMessage);
         }
 
@@ -146,9 +148,9 @@ namespace CovisartMotionSDK
 
         private void SendOfData(string axisX, string axisY)
         {
-            _axisData = new AxisData {AxisX = axisX, AxisY = axisY};
+            _axisData = new AxisData { AxisX = axisX, AxisY = axisY };
             var state = _communication.SendData(_axisData);
-            if(state.hasError)
+            if (state.hasError)
                 Debug.Log(state.errorMessage);
         }
 
@@ -166,10 +168,9 @@ namespace CovisartMotionSDK
             Debug.Log(state);
         }*/
 
-        //private static string SendData(byte[] bits)
-        //{
-        //    return MyTcpClient.Connect("127.0.0.1", bits);
-        //}
+        private static string SendData(byte[] bits)
+        {
+            return MyTcpClient.Connect("127.0.0.1", bits);
+        }
     }
 }
-
