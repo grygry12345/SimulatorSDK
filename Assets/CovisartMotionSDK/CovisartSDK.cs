@@ -4,6 +4,8 @@ using UnityEngine;
 using System.Threading;
 using System;
 using System.Runtime.CompilerServices;
+using System.Reflection;
+using System.Runtime.InteropServices;
 
 namespace CovisartMotionSDK
 {
@@ -100,9 +102,16 @@ namespace CovisartMotionSDK
             string json = (SendData(_commandData.GetState()));
 
             state = new CommandData();
-            // it will be chacked
-            JsonUtility.FromJsonOverwrite(json, state);
-            Debug.Log(this.state);
+            state = JsonUtility.FromJson<CommandData>(json);
+
+            // Printing info
+            Type t = state.GetType();
+            FieldInfo[] fields = t.GetFields();
+
+            foreach (var field in fields)
+            {
+                    Debug.Log(field.Name + " " + field.FieldType.Name + " " + field.GetValue(state));
+            }
         }
 
         public void StartExactPosition()
