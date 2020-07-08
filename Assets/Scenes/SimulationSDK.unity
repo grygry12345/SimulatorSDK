@@ -916,6 +916,26 @@ PrefabInstance:
   m_Modification:
     m_TransformParent: {fileID: 1224526184}
     m_Modifications:
+    - target: {fileID: 4182732684063230336, guid: d35bccd7c4d8f794ea7ff8c7fb31bf90,
+        type: 3}
+      propertyPath: m_Color.r
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 4182732684063230336, guid: d35bccd7c4d8f794ea7ff8c7fb31bf90,
+        type: 3}
+      propertyPath: m_Color.g
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 4182732684063230336, guid: d35bccd7c4d8f794ea7ff8c7fb31bf90,
+        type: 3}
+      propertyPath: m_Color.b
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 6787706237330511360, guid: d35bccd7c4d8f794ea7ff8c7fb31bf90,
+        type: 3}
+      propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_MethodName
+      value: ToggleExactPosition
+      objectReference: {fileID: 0}
     - target: {fileID: 6794017570886912818, guid: d35bccd7c4d8f794ea7ff8c7fb31bf90,
         type: 3}
       propertyPath: m_AnchorMin.y
@@ -1420,6 +1440,21 @@ PrefabInstance:
         type: 3}
       propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[1].m_Arguments.m_ObjectArgumentAssemblyTypeName
       value: UnityEngine.Object, UnityEngine
+      objectReference: {fileID: 0}
+    - target: {fileID: 8671432280307378136, guid: d35bccd7c4d8f794ea7ff8c7fb31bf90,
+        type: 3}
+      propertyPath: m_Colors.m_NormalColor.r
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 8671432280307378136, guid: d35bccd7c4d8f794ea7ff8c7fb31bf90,
+        type: 3}
+      propertyPath: m_Colors.m_NormalColor.g
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 8671432280307378136, guid: d35bccd7c4d8f794ea7ff8c7fb31bf90,
+        type: 3}
+      propertyPath: m_Colors.m_NormalColor.b
+      value: 1
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: d35bccd7c4d8f794ea7ff8c7fb31bf90, type: 3}

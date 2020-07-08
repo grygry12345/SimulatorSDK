@@ -8,21 +8,21 @@ using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Collections;
 using UnityEngine.UI;
-using UnityEngine.UIElements;
+// using UnityEngine.UIElements;
 
 namespace CovisartMotionSDK
 {
     public class CovisartSDK : MonoBehaviour
     {
-        public GameObject Aircraft;
         private static CommunicationSDK _communication;
         private AxisData _axisData;
         private SimulatorCommandData _commandData;
+        private ProgressState<bool> progressState;
         public bool IsDataTransferStarted = false;
+        
+        public GameObject Aircraft;
         private Thread controlThread;
         private CommandData state;
-
-        private GameObject textObj;
         private Text buttonText;
 
         // Temp varible
@@ -32,16 +32,24 @@ namespace CovisartMotionSDK
         {
             _commandData = new SimulatorCommandData();
             state = new CommandData();
+            progressState = new ProgressState<bool>();
         }
 
-        private void setButtonText(int buttonNumber, string text)
+        private void SetButtonText(int buttonNumber, string text)
         {
             // Get child button gameobject then get grandchild gameobject text.
-            textObj = this.gameObject.transform.GetChild(buttonNumber).GetChild(0).gameObject;
+            var textObj = this.gameObject.transform.GetChild(buttonNumber).GetChild(0).gameObject;
             buttonText = textObj.GetComponent<Text>();
 
             buttonText.text = text;
         }
+
+        //private void SetButtonColor(int buttonNumber, Color buttonColor)
+        //{
+        //    var textObj = gameObject.transform.GetChild(buttonNumber).gameObject;
+        //    var button = textObj.GetComponent<Button>().colors;
+        //    button.normalColor = buttonColor;
+        //}
 
         private void ControlTread(Func<byte[]> command, string log)
         {
@@ -56,6 +64,7 @@ namespace CovisartMotionSDK
                 Debug.LogError("Thread is busy");
             }
         }
+        
         private void ControlTread(Action command)
         {
             if (!(controlThread?.IsAlive ?? false))
@@ -78,7 +87,7 @@ namespace CovisartMotionSDK
                 tempOpenConnection = true;
                 // OnStateUpdate();
                 // change button text close connection
-                setButtonText(0, "Close Connection");
+                SetButtonText(0, "Closing Connection");
                 // make power X and Y button active ...
             }
             else
@@ -87,29 +96,31 @@ namespace CovisartMotionSDK
                 tempOpenConnection = false;
                 // OnStateUpdate();
                 // change button text open connection
-                setButtonText(0, "Connect");
+                SetButtonText(0, "Connect");
                 // make power X and Y button pasive ...
             }
         }
 
         public void PowerMotors()
         {
-            if (state.EngineXPowerState && state.EngineYPowerState && tempOpenConnection)
+            if (state.EngineXPowerState && state.EngineYPowerState && tempOpenConnection && !progressState.hasError)
             {
                 ControlTread(_commandData.PowerOff, "Motors powered off");
                 OnStateUpdate();
                 // make calibrate X and Y buttons pasive
-                // change button text power on
-                setButtonText(1, "Power");
+
+                // change button text power on and change color
+                SetButtonText(1, "Power");
                 // toggle powerMotors on and change button text
             }
-            else if (tempOpenConnection)
+            else if (tempOpenConnection && !progressState.hasError)
             {
                 ControlTread(_commandData.PowerOn, "Motors Powered");
                 OnStateUpdate();
                 // make calibrate X and Y buttons active
-                // change button text power off
-                setButtonText(1, "Power Off");
+                
+                // change button text power off and change color
+                SetButtonText(1, "Power Off");
                 // toggle powerMotors off and button text
             }
             else
@@ -120,7 +131,7 @@ namespace CovisartMotionSDK
 
         public void PowerAxisX()
         {
-            if (state.EngineXPowerState && tempOpenConnection)
+            if (state.EngineXPowerState && tempOpenConnection && !progressState.hasError)
             {
                 ControlTread(_commandData.PowerOffX, "Motors X powered off");
                 OnStateUpdate();
@@ -128,7 +139,7 @@ namespace CovisartMotionSDK
                 // change button text "power X on"
                 // toggle powerMotors X on
             }
-            else if (tempOpenConnection)
+            else if (tempOpenConnection && !progressState.hasError)
             {
                 ControlTread(_commandData.PowerOnX, "X Powered");
                 OnStateUpdate();
@@ -144,7 +155,7 @@ namespace CovisartMotionSDK
 
         public void PowerAxisY()
         {
-            if (state.EngineYPowerState && tempOpenConnection)
+            if (state.EngineYPowerState && tempOpenConnection && !progressState.hasError)
             {
                 ControlTread(_commandData.PowerOffY, "Motors Y powered off");
                 OnStateUpdate();
@@ -152,7 +163,7 @@ namespace CovisartMotionSDK
                 // change button text "power Y on"
                 // toggle powerMotors text on
             }
-            else if (tempOpenConnection)
+            else if (tempOpenConnection && !progressState.hasError)
             {
                 ControlTread(_commandData.PowerOnY, "Y Powered");
                 OnStateUpdate();
@@ -168,7 +179,7 @@ namespace CovisartMotionSDK
 
         public void CalibrateAxisX()
         {
-            if (tempOpenConnection && state.EngineXPowerState)
+            if (state.EngineXPowerState && !state.EngineXEnableExactPositionState && !progressState.hasError && !state.EngineXCalibrationState && state.ConnectionState)
             {
                 ControlTread(_commandData.CalibrateX, "X Calibrated");
                 OnStateUpdate();
@@ -183,7 +194,7 @@ namespace CovisartMotionSDK
 
         public void CalibrateAxisY()
         {
-            if (tempOpenConnection && state.EngineYPowerState)
+            if (state.EngineYPowerState && !state.EngineYEnableExactPositionState && !progressState.hasError && !state.EngineYCalibrationState && state.ConnectionState)
             {
                 ControlTread(_commandData.CalibrateY, "Y Calibrated");
                 OnStateUpdate();
@@ -198,50 +209,97 @@ namespace CovisartMotionSDK
 
         public void ResetError()
         {
-            ControlTread(_commandData.ResetError, "Error Reset");
+            if (state.ConnectionState && progressState.hasError)
+            {
+                ControlTread(_commandData.ResetError, "Error Reset");
+                OnStateUpdate();
+            }
         }
 
         public void ResetErrorX()
         {
-            ControlTread(_commandData.ResetErrorX, "Error X Reset");
+            if (state.ConnectionState && progressState.hasError)
+            {
+                ControlTread(_commandData.ResetErrorX, "Error X Reset");
+                OnStateUpdate();
+            }
         }
 
         public void ResetErrorY()
         {
-            ControlTread(_commandData.ResetErrorY, "Error Y Reset");
-        }
-
-        private void StartExactPositionThread()
-        {
-            _commandData.EnableExactPositonX();
-            _commandData.EnableExactPositonY();
-
-            // Printing info
-            Type t = state.GetType();
-            FieldInfo[] fields = t.GetFields();
-
-            foreach (var field in fields)
+            if (state.ConnectionState && progressState.hasError)
             {
-                Debug.Log(field.Name + " " + field.FieldType.Name + " " + field.GetValue(state));
+                ControlTread(_commandData.ResetErrorY, "Error Y Reset");
+                OnStateUpdate();
             }
         }
 
-        public void StartExactPosition()
+        private void ToggleExactPositionThread()
         {
-            ControlTread(StartExactPositionThread);
+            // Enable exactposition
+            if (state.EngineXPowerState && state.EngineYPowerState && 
+                !state.EngineXEnableExactPositionState && !state.EngineYEnableExactPositionState && 
+                !progressState.hasError && state.EngineXCalibrationState && state.EngineYCalibrationState && state.ConnectionState)
+            {
+                _commandData.EnableExactPositonX();
+                _commandData.EnableExactPositonY();
+                SetButtonText(6, "DisableExactPosition");
+                
+                // Printing info state info
+                Type t = state.GetType();
+                FieldInfo[] fields = t.GetFields();
+
+                foreach (var field in fields)
+                {
+                    Debug.Log(field.Name + " " + field.FieldType.Name + " " + field.GetValue(state));
+                }
+
+            }
+            // disable exact position
+            else if (state.EngineXPowerState && state.EngineYPowerState &&
+                state.EngineXEnableExactPositionState && state.EngineYEnableExactPositionState &&
+                !progressState.hasError && state.ConnectionState)
+            {
+                _commandData.DisableExactPositionX();
+                _commandData.DisableExactPositionY();
+                SetButtonText(6, "EnableExactPosition");
+
+                // Printing info state info
+                Type t = state.GetType();
+                FieldInfo[] fields = t.GetFields();
+
+                foreach (var field in fields)
+                {
+                    Debug.Log(field.Name + " " + field.FieldType.Name + " " + field.GetValue(state));
+                }
+            }
+            else
+            {
+                Debug.LogError("Can't start exact position");
+            }
+        }
+
+        public void ToggleExactPosition()
+        {
+            ControlTread(ToggleExactPositionThread);
+            OnStateUpdate();
         }
 
         public void StartDataListener()
         {
-            ControlTread(_commandData.StartArmaThread, "Data listener started.");
+            if (state.EngineXCalibrationState && state.EngineYCalibrationState && !state.EngineXEnableExactPositionState && !state.EngineYEnableExactPositionState && !state.EngineXErrorState && !state.EngineYErrorState)
+            {
+                ControlTread(_commandData.StartArmaThread, "Data listener started.");
+                OnStateUpdate();
+            }
         }
 
         private void StartDataTransferThread()
         {
             _communication = new CommunicationSDK();
-            var state = _communication.StartCommunication();
-            if (state.hasError)
-                Debug.LogError(state.errorMessage);
+            progressState = _communication.StartCommunication();
+            if (progressState.hasError)
+                Debug.LogError(progressState.errorMessage);
             else
             {
                 IsDataTransferStarted = true;
@@ -257,9 +315,13 @@ namespace CovisartMotionSDK
         {
             if (_communication == null)
                 _communication = new CommunicationSDK();
-            var state = _communication.StopCommunication();
-            if (state.hasError)
-                Debug.LogError(state.errorMessage);
+            progressState = _communication.StopCommunication();
+            if (progressState.hasError)
+                Debug.LogError(progressState.errorMessage);
+            else
+            {
+                IsDataTransferStarted = false;
+            }
         }
 
         public void StopDataTrensfer()
@@ -270,11 +332,9 @@ namespace CovisartMotionSDK
         private void SendOfData(string axisX, string axisY)
         {
             _axisData = new AxisData { AxisX = axisX, AxisY = axisY };
-            var state = _communication.SendData(_axisData);
-            if (state.hasError)
-                Debug.Log(state.errorMessage);
-            else
-                state.returnValue.ToString();
+            progressState = _communication.SendData(_axisData);
+            if (progressState.hasError)
+                Debug.Log(progressState.errorMessage);
         }
 
         void Update()
@@ -289,6 +349,7 @@ namespace CovisartMotionSDK
         {
             string json = (SendData(_commandData.GetState()));
             state = JsonUtility.FromJson<CommandData>(json);
+            
         }
 
 
