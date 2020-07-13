@@ -25,13 +25,12 @@ namespace CovisartMotionSDK
         private CommandData state;
         private Text buttonText;
 
-        // Temp varible
-        private bool tempOpenConnection = false;
 
         void Awake()
         {
             _commandData = new SimulatorCommandData();
             state = new CommandData();
+            OnStateUpdate();
             progressState = new ProgressState<bool>();
         }
 
@@ -44,12 +43,12 @@ namespace CovisartMotionSDK
             buttonText.text = text;
         }
 
-        //private void SetButtonColor(int buttonNumber, Color buttonColor)
-        //{
-        //    var textObj = gameObject.transform.GetChild(buttonNumber).gameObject;
-        //    var button = textObj.GetComponent<Button>().colors;
-        //    button.normalColor = buttonColor;
-        //}
+        private void SetButtonColor(int buttonNumber, Color buttonColor)
+        {
+            var buttonObj = gameObject.transform.GetChild(buttonNumber).gameObject;
+            var buttonColors = buttonObj.GetComponent<Button>().colors;
+            buttonColors.normalColor = buttonColor;
+        }
 
         private void ControlTread(Func<byte[]> command, string log)
         {
@@ -81,20 +80,18 @@ namespace CovisartMotionSDK
         public void OpenConnection()
         {
             // toggle connection off and on button
-            if (!tempOpenConnection)
+            if (!state.ConnectionState)
             {
                 ControlTread(_commandData.OpenConnection, "Opened connection");
-                tempOpenConnection = true;
-                // OnStateUpdate();
+                OnStateUpdate();
                 // change button text close connection
-                SetButtonText(0, "Closing Connection");
+                SetButtonText(0, "Disconnect");
                 // make power X and Y button active ...
             }
             else
             {
                 ControlTread(_commandData.CloseConnection, "Closed conncetion");
-                tempOpenConnection = false;
-                // OnStateUpdate();
+                OnStateUpdate();
                 // change button text open connection
                 SetButtonText(0, "Connect");
                 // make power X and Y button pasive ...
@@ -103,7 +100,7 @@ namespace CovisartMotionSDK
 
         public void PowerMotors()
         {
-            if (state.EngineXPowerState && state.EngineYPowerState && tempOpenConnection && !progressState.hasError)
+            if (state.EngineXPowerState && state.EngineYPowerState && state.ConnectionState && !progressState.hasError)
             {
                 ControlTread(_commandData.PowerOff, "Motors powered off");
                 OnStateUpdate();
@@ -113,7 +110,7 @@ namespace CovisartMotionSDK
                 SetButtonText(1, "Power");
                 // toggle powerMotors on and change button text
             }
-            else if (tempOpenConnection && !progressState.hasError)
+            else if (state.ConnectionState && !progressState.hasError)
             {
                 ControlTread(_commandData.PowerOn, "Motors Powered");
                 OnStateUpdate();
@@ -131,21 +128,21 @@ namespace CovisartMotionSDK
 
         public void PowerAxisX()
         {
-            if (state.EngineXPowerState && tempOpenConnection && !progressState.hasError)
+            if (state.EngineXPowerState && state.ConnectionState && !progressState.hasError)
             {
                 ControlTread(_commandData.PowerOffX, "Motors X powered off");
                 OnStateUpdate();
                 // make calibrate X button pasive
                 // change button text "power X on"
-                // toggle powerMotors X on
+
             }
-            else if (tempOpenConnection && !progressState.hasError)
+            else if (state.ConnectionState && !progressState.hasError)
             {
                 ControlTread(_commandData.PowerOnX, "X Powered");
                 OnStateUpdate();
                 // make calibrate X button active
                 // change button text "power X off"
-                // toggle powerMotors X off
+
             }
             else
             {
@@ -155,7 +152,7 @@ namespace CovisartMotionSDK
 
         public void PowerAxisY()
         {
-            if (state.EngineYPowerState && tempOpenConnection && !progressState.hasError)
+            if (state.EngineYPowerState && state.ConnectionState && !progressState.hasError)
             {
                 ControlTread(_commandData.PowerOffY, "Motors Y powered off");
                 OnStateUpdate();
@@ -163,7 +160,7 @@ namespace CovisartMotionSDK
                 // change button text "power Y on"
                 // toggle powerMotors text on
             }
-            else if (tempOpenConnection && !progressState.hasError)
+            else if (state.ConnectionState && !progressState.hasError)
             {
                 ControlTread(_commandData.PowerOnY, "Y Powered");
                 OnStateUpdate();
