@@ -8,6 +8,7 @@ using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Collections;
 using UnityEngine.UI;
+using SimulatorBackgroundWorkerService.Enums;
 // using UnityEngine.UIElements;
 
 namespace CovisartMotionSDK
@@ -63,7 +64,21 @@ namespace CovisartMotionSDK
                 Debug.LogError("Thread is busy");
             }
         }
-        
+
+        private void ControlTread(Func<EngineType ,byte[]> command,EngineType v, string log)
+        {
+            if (!(controlThread?.IsAlive ?? false))
+            {
+                controlThread = new Thread(() => SendData(command(v)));
+                controlThread.Start();
+                Debug.Log(log);
+            }
+            else
+            {
+                Debug.LogError("Thread is busy");
+            }
+        }
+
         private void ControlTread(Action command)
         {
             if (!(controlThread?.IsAlive ?? false))
@@ -94,6 +109,7 @@ namespace CovisartMotionSDK
                 OnStateUpdate();
                 // change button text open connection
                 SetButtonText(0, "Connect");
+                SetButtonText(1, "Power");
                 // make power X and Y button pasive ...
             }
         }
@@ -211,6 +227,10 @@ namespace CovisartMotionSDK
                 ControlTread(_commandData.ResetError, "Error Reset");
                 OnStateUpdate();
             }
+            else
+            {
+                Debug.LogError("Progress state has no error");
+            }
         }
 
         public void ResetErrorX()
@@ -220,6 +240,10 @@ namespace CovisartMotionSDK
                 ControlTread(_commandData.ResetErrorX, "Error X Reset");
                 OnStateUpdate();
             }
+            else
+            {
+                Debug.LogError("Progress state has no error");
+            }
         }
 
         public void ResetErrorY()
@@ -228,6 +252,10 @@ namespace CovisartMotionSDK
             {
                 ControlTread(_commandData.ResetErrorY, "Error Y Reset");
                 OnStateUpdate();
+            }
+            else
+            {
+                Debug.LogError("Progress state has no error");
             }
         }
 
@@ -326,6 +354,20 @@ namespace CovisartMotionSDK
             ControlTread(StopDataTransferThread);
         }
 
+        public void ManuelControlUp()
+        {
+            ControlTread(_commandData.ManuelControlUp, EngineType.X, "Motors X up");
+            ControlTread(_commandData.ManuelControlUp, EngineType.Y, "Motors Y up");
+            OnStateUpdate();
+        }
+
+        public void ManuelControlDown()
+        {
+            ControlTread(_commandData.ManuelControlDown, EngineType.X, "Motors X Down");
+            ControlTread(_commandData.ManuelControlDown, EngineType.Y, "Motors Y Down");
+            OnStateUpdate();
+        }
+
         private void SendOfData(string axisX, string axisY)
         {
             _axisData = new AxisData { AxisX = axisX, AxisY = axisY };
@@ -346,7 +388,6 @@ namespace CovisartMotionSDK
         {
             string json = (SendData(_commandData.GetState()));
             state = JsonUtility.FromJson<CommandData>(json);
-            
         }
 
 
