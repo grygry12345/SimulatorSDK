@@ -9,6 +9,9 @@ using System.Runtime.InteropServices;
 using System.Collections;
 using UnityEngine.UI;
 using SimulatorBackgroundWorkerService.Enums;
+using System.Net.Sockets;
+using System.Net;
+using System.Text;
 // using UnityEngine.UIElements;
 
 namespace CovisartMotionSDK
@@ -19,16 +22,18 @@ namespace CovisartMotionSDK
         private AxisData _axisData;
         private SimulatorCommandData _commandData;
         private ProgressState<bool> progressState;
-        public bool IsDataTransferStarted = false;
+        private bool toggleExactPosition;
         
+        public bool IsDataTransferStarted = false;
         public GameObject Aircraft;
+        public AircraftData AircraftData;
         private Thread controlThread;
         private CommandData state;
         private Text buttonText;
 
-
         void Awake()
         {
+            toggleExactPosition = false;
             _commandData = new SimulatorCommandData();
             state = new CommandData();
             OnStateUpdate();
@@ -259,55 +264,66 @@ namespace CovisartMotionSDK
             }
         }
 
-        private void ToggleExactPositionThread()
+        private void StartExactPositionThread()
         {
             // Enable exactposition
             if (state.EngineXPowerState && state.EngineYPowerState && 
                 !state.EngineXEnableExactPositionState && !state.EngineYEnableExactPositionState && 
                 !progressState.hasError && state.EngineXCalibrationState && state.EngineYCalibrationState && state.ConnectionState)
             {
-                _commandData.EnableExactPositonX();
-                _commandData.EnableExactPositonY();
-                SetButtonText(6, "DisableExactPosition");
+                SendData(_commandData.EnableExactPositonX());
+                SendData(_commandData.EnableExactPositonY());
+                OnStateUpdate();
                 
-                // Printing info state info
-                Type t = state.GetType();
-                FieldInfo[] fields = t.GetFields();
-
-                foreach (var field in fields)
-                {
-                    Debug.Log(field.Name + " " + field.FieldType.Name + " " + field.GetValue(state));
-                }
-
+                Debug.Log("Exact Posiiton Enabled");
+                PrintStateInfo();
             }
             // disable exact position
             else if (state.EngineXPowerState && state.EngineYPowerState &&
                 state.EngineXEnableExactPositionState && state.EngineYEnableExactPositionState &&
                 !progressState.hasError && state.ConnectionState)
             {
-                _commandData.DisableExactPositionX();
-                _commandData.DisableExactPositionY();
-                SetButtonText(6, "EnableExactPosition");
+                SendData(_commandData.DisableExactPositionX());
+                SendData(_commandData.DisableExactPositionY());
+                OnStateUpdate();
 
-                // Printing info state info
-                Type t = state.GetType();
-                FieldInfo[] fields = t.GetFields();
-
-                foreach (var field in fields)
-                {
-                    Debug.Log(field.Name + " " + field.FieldType.Name + " " + field.GetValue(state));
-                }
+                Debug.Log("Exact Posiiton Disabled");
+                PrintStateInfo();
             }
             else
             {
-                Debug.LogError("Can't start exact position");
+                Debug.LogError("Invalid");
             }
         }
 
-        public void ToggleExactPosition()
+        public void StartCovisartUDP()
         {
-            ControlTread(ToggleExactPositionThread);
+            ControlTread(_commandData.StartCovisartUdpServer, "Covisart UDP started");
             OnStateUpdate();
+        }
+
+        public void StopCovisartUDP()
+        {
+            ControlTread(_commandData.StopCovisartUdpServer, "Covisart UDP stopped");
+            OnStateUpdate();
+        }
+
+        public void StartExactPosition()
+        {
+            
+            ControlTread(StartExactPositionThread);
+
+            // Toggle button text
+            if (toggleExactPosition == false)
+            {
+                SetButtonText(6, "DisableExactPosiiton");
+                toggleExactPosition = true;
+            } 
+            else
+            {
+                SetButtonText(6, "StartExactPosition");
+                toggleExactPosition = false;
+            }
         }
 
         public void StartDataListener()
@@ -378,16 +394,34 @@ namespace CovisartMotionSDK
 
         void Update()
         {
-            if (!IsDataTransferStarted) return;
-            var x = Aircraft.transform.eulerAngles.x.ToString();
-            var y = Aircraft.transform.eulerAngles.y.ToString();
-            SendOfData(x, y);
+            //if (!IsDataTransferStarted) return;
+            //var x = Aircraft.transform.eulerAngles.x.ToString();
+            //var y = Aircraft.transform.eulerAngles.y.ToString();
+            //SendOfData(x, y);
+
+            // Send aircraft data every frame
+            if (state.CovisartUdpServerState)
+            {
+                SendUDPData(AircraftData);
+            }
         }
 
+        // Updates Json
         public void OnStateUpdate()
         {
             string json = (SendData(_commandData.GetState()));
             state = JsonUtility.FromJson<CommandData>(json);
+        }
+
+        public void PrintStateInfo()
+        {
+            Type t = state.GetType();
+            FieldInfo[] fields = t.GetFields();
+
+            foreach (var field in fields)
+            {
+                Debug.Log(field.Name + " " + field.FieldType.Name + " " + field.GetValue(state));
+            }
         }
 
 
@@ -400,6 +434,28 @@ namespace CovisartMotionSDK
         private static string SendData(byte[] bits)
         {
             return MyTcpClient.Connect("127.0.0.1", bits);
+        }
+        
+        private static void SendUDPData(AircraftData aircraftData)
+        {
+            Socket sock = new Socket(AddressFamily.InterNetwork, SocketType.Dgram,
+            ProtocolType.Udp);
+
+            IPAddress serverAddr = IPAddress.Parse("127.0.0.1");
+
+            IPEndPoint endPoint = new IPEndPoint(serverAddr, 555);
+
+            string text = aircraftData.axisX.ToString() + "*";
+            text += aircraftData.axisY.ToString() + "*";
+            text += aircraftData.axisZ.ToString() + "*";
+            text += aircraftData.eulerAngle.x.ToString() + "*";
+            text += aircraftData.eulerAngle.y.ToString() + "*";
+            text += aircraftData.eulerAngle.z.ToString() + "*";
+
+            byte[] send_buffer = Encoding.ASCII.GetBytes(text);
+
+
+            sock.SendTo(send_buffer, endPoint);
         }
     }
 }
