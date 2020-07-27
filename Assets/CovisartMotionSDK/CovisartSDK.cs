@@ -30,6 +30,9 @@ namespace CovisartMotionSDK
         private Thread controlThread;
         private CommandData state;
         private Text buttonText;
+        private Socket sock = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
+        private static IPAddress serverAddr = IPAddress.Parse("127.0.0.1");
+        private IPEndPoint endPoint = new IPEndPoint(serverAddr, 555);
 
         void Awake()
         {
@@ -38,6 +41,7 @@ namespace CovisartMotionSDK
             state = new CommandData();
             OnStateUpdate();
             progressState = new ProgressState<bool>();
+            
         }
 
         private void SetButtonText(int buttonNumber, string text)
@@ -436,15 +440,8 @@ namespace CovisartMotionSDK
             return MyTcpClient.Connect("127.0.0.1", bits);
         }
         
-        private static void SendUDPData(AircraftData aircraftData)
+        private void SendUDPData(AircraftData aircraftData)
         {
-            Socket sock = new Socket(AddressFamily.InterNetwork, SocketType.Dgram,
-            ProtocolType.Udp);
-
-            IPAddress serverAddr = IPAddress.Parse("127.0.0.1");
-
-            IPEndPoint endPoint = new IPEndPoint(serverAddr, 555);
-
             string text = aircraftData.axisX.ToString() + "*";
             text += aircraftData.axisY.ToString() + "*";
             text += aircraftData.axisZ.ToString() + "*";
@@ -453,7 +450,6 @@ namespace CovisartMotionSDK
             text += aircraftData.eulerAngle.z.ToString() + "*";
 
             byte[] send_buffer = Encoding.ASCII.GetBytes(text);
-
 
             sock.SendTo(send_buffer, endPoint);
         }
