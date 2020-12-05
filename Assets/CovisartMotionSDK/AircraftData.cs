@@ -31,6 +31,7 @@ namespace CovisartMotionSDK
             eulerAngle = jet.transform.eulerAngles;
             position = jet.transform.position;
         }
+        
         public void StartDataTransfer()
         {
             SendData(commandaData.OpenConnection());
@@ -40,6 +41,7 @@ namespace CovisartMotionSDK
             var state = SendData(commandaData.GetState());
             Debug.Log(state);
         }
+
         private static  string SendData(byte[] bits)
         {
             return MyTcpClient.Connect("127.0.0.1", bits);
